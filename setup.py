@@ -10,10 +10,13 @@ setuptools.setup(
     author='A. Ray',
     packages=['infoseq'],
     requires=[
+        'wheel',
         'numpy',
-        'scipy',
         'matplotlib',
         'jupyter',
         'pandas',
+        'ipython',
+        'ipdb',
+        'mypy',
     ],
 )
