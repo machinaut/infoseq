@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# %%
+# %% 
 import random
 
 class Tree:
@@ -36,6 +36,10 @@ class Tree:
             token, text = self.encode_single(text, compression=compression)
             tokens.append(token)
         return tokens
+
+    def decode(self, tokens):
+        decode_map = self.decode_map
+        return b''.join(decode_map[t] for t in tokens)
 
     def check(self, text):
         if not len(text):
@@ -98,6 +102,3 @@ class Tokenization:
 
 tok = Tokenization()
 tok.decode(tok.encode(b'abcd'))
-
-# %%
-def create_bpe(dataset)
