@@ -112,3 +112,18 @@ class Tokenization:
         for b in range(256):
             tok.add(bytes([b]))
         return tok
+
+    def to_dot(self):
+        ''' Return a DOT (graphviz) representation of the tokenization '''
+        # Convert to pdf: $> dot -Tpdf -o tokenization.pdf tokenization.dot
+        # Node IDs are the token numbers
+        node_lines = []
+        edge_lines = []
+        for token, code in sorted(self):
+            if token > 0:
+                prev_token = self.encode_map[code[:-1]]
+                edge_lines.append(f'{prev_token} -> {token}')
+            label = repr(code).replace('"','\\"')
+            node_lines.append(f'{token} [label="{label}"]')
+        all_lines = ['digraph {'] + node_lines + edge_lines + ['}']
+        return '\n'.join(all_lines)
