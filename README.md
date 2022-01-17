@@ -16,7 +16,5 @@ For now we will just get txt file versions of the English books.
 Currently working on tokenization and BPE stuff.
 
 Need to do:
-* Add unit tests for tree and tokenization
-    * Use this as a secure point to iterate on simplifying the tree/tokenizer
 * Add a way to save a tokenization to a file and load it back
-* Add byte pair encoding algorithm
+* Preprocess KJV tokenization to BPE
