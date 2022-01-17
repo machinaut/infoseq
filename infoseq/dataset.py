@@ -28,4 +28,4 @@ class Dataset:
 # tiny = Dataset(bytes=b'abc')
 # tiny.sample(4)
 
-kjv = Dataset.from_file(os.path.join(DATA_PATH, 'kjv.txt'))
+kjv_path = os.path.join(DATA_PATH, 'kjv.txt')
