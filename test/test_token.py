@@ -57,6 +57,8 @@ class TestTokenization(unittest.TestCase):
         self.assertGreaterEqual(encodings.count((0, 1)), N * .2)
         # at least 10% with double zero pad
         self.assertGreaterEqual(encodings.count((0, 0, 1)), N * .1)
+        # Make sure we never end with empty string
+        self.assertNotIn((1, 0), encodings)
 
 
 
