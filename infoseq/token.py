@@ -6,29 +6,29 @@ import random
 class Tree:
     def __init__(self, token, children=None, seed=None):
         self.token = token
-        self.children = children or [None] * 256
+        self.children = children or {}
         self.rng = random.Random(seed)
 
     def add(self, token, text):
-        b = text[0]
-        if self.children[b] is None:
-            self.children[b] = Tree(token)
-        if len(text) > 1:
-            self.children[b].add(token, text[1:])
+        t, *ext = text
+        if t not in self.children:
+            self.children[t] = Tree(token)
+        if ext:
+            self.children[t].add(token, ext)
     
     def encode_single(self, text, compression=.9):
         # Leaf node
         if not len(text):
             return self.token, b''
-        t = text[0]
+        t, *ext = text
         assert 0 <= t < 256, f't={t}'
         # Stochastically choose to leave the tree early
         if self.rng.random() > compression:
             return self.token, text
         # Otherwise, recurse to children if possible
-        if self.children[t] is None:
+        if t not in self.children:
             return self.token, text
-        return self.children[t].encode_single(text[1:], compression=compression)
+        return self.children[t].encode_single(ext, compression=compression)
 
     def encode(self, text, compression=.9):
         tokens = []
@@ -46,14 +46,14 @@ class Tree:
             return True
         t = text[0]
         assert 0 <= t < 256, f't={t}'
-        if self.children[t] is None:
+        if t not in self.children:
             return False
         return self.children[t].check(text[1:])
 
     @property
     def encode_map(self):
         encode_map = {b'': self.token}
-        for t, child in enumerate(self.children):
+        for t, child in self.children.items():
             if child is not None:
                 for text, token in child.encode_map.items():
                     encode_map[bytes([t]) + text] = token
@@ -63,18 +63,65 @@ class Tree:
     def decode_map(self):
         return {v: k for k, v in self.encode_map.items()}
 
-tree = Tree(0)
-tree.add(1, b'a')
-tree.add(2, b'b')
-tree.add(3, b'c')
-tree.add(4, b'ab')
-tree.encode(b'abc')
-# tree.encode_map
-# tree.decode_map
+# %%
+class Tokenization:
+    def __init__(self, seed=None):
+        self.rng = random.Random(seed)
+        self.tree = {}
+        self.encode_map = {b'': 0}
+        self.decode_map = {0: b''}
+
+    def add(self, text: bytes):
+        assert text, repr(text)
+        assert text not in self.encode_map, f'{repr(text)} already in encode_map'
+        current = self.tree
+        # Add all substrings to the tree before the full string
+        if text[:-1] not in self.encode_map:
+            self.add(text[:-1])
+        # Add new token to our maps
+        token = len(self.encode_map)
+        self.encode_map[text] = token
+        self.decode_map[token] = text
+        # Traverse the tree to add the node
+        while text:
+            t, *text = text
+            if t not in current:
+                current[t] = {}
+            current = current[t]
+        return token
+
+    def encode_step(self, text: bytes, compression: float=0.9):
+        ''' Encode a single step, returning the next token and remaining text '''
+        assert 0.0 <= compression <= 1.0, repr(compression)
+        # Traverse the tree
+        code = []
+        current = self.tree
+        while text and text[0] in current and self.rng.random() < compression:
+            code.append(text[0])
+            current = current[text[0]]
+            text = text[1:]
+        # Return the token and remaining text
+        return self.encode_map[bytes(code)], text
+
+    def encode(self, text: bytes, compression: float=0.9):
+        ''' Encode a string, returning a list of tokens '''
+        assert 0.0 <= compression <= 1.0, repr(compression)
+        # Encode the text step by step
+        tokens = []
+        while len(text):
+            token, text = self.encode_step(text, compression=compression)
+            tokens.append(token)
+        return tokens
+
+    def decode(self, tokens: list):
+        ''' Decode a list of tokens, returning the original text '''
+        return b''.join(self.decode_map[t] for t in tokens)
+
+
 
 # %%
 
-class Tokenization:
+class TokenizationOld:
     def __init__(self, seed=None):
         self.rng = random.Random(seed)
         self.tree = Tree(0)
@@ -100,5 +147,5 @@ class Tokenization:
             self.tree.add(token, text)
             self.decode_map[token] = text
 
-tok = Tokenization()
-tok.decode(tok.encode(b'abcd'))
+# tok = Tokenization()
+# tok.decode(tok.encode(b'abcd'))
