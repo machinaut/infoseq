@@ -18,3 +18,4 @@ Currently working on tokenization and BPE stuff.
 Need to do:
 * Add a way to save a tokenization to a file and load it back
 * Preprocess KJV tokenization to BPE
+* Make a visualization of the tokenization with graphviz

@@ -6,7 +6,11 @@ from infoseq.token import Tokenization
 
 def bpe_from_text(text, max_tokens=1000, compression=0.9, seq_len=300, num_seq=300, seed=None):
     """Create a Byte Pair Encoding (BPE) tokenization"""
-    tok = Tokenization.basic(0)
+    tok = Tokenization(seed=seed)
+    # Add all unique bytes present in the text
+    for b in set(text):
+        tok.add(bytes([b]))
+    # Add pairs until we reach max_tokens
     while len(tok) < max_tokens:
         # Get pairs until we get something new
         for code in get_pairs(text, tok, compression=compression, seq_len=seq_len, num_seq=num_seq, seed=seed):

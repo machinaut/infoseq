@@ -27,8 +27,9 @@ class TestBPE(unittest.TestCase):
 
     def test_bpe(self):
         text = b'aaabdaaabac'
-        tok = bpe_from_text(text, max_tokens=257 + 3,
+        tok = bpe_from_text(text, max_tokens=8,
                             compression=1.0, seq_len=len(text), num_seq=1, seed=0)
+        self.assertEqual(8, len(tok))
         self.assertIn(b'aa', tok)
         self.assertIn(b'aaa', tok)
         self.assertIn(b'aaab', tok)
