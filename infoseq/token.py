@@ -10,20 +10,24 @@ class Tokenization:
         self.encode_map = {b'': 0}
         self.decode_map = {0: b''}
 
+    def __len__(self):
+        return len(self.encode_map)
+
+    def __contains__(self, item):
+        return item in self.encode_map or item in self.decode_map
+
     def add(self, text: bytes):
         ''' Add a new code to the tree, returning the token '''
         assert text, repr(text)
         assert text not in self.encode_map, f'{repr(text)} already in encode_map'
-        current = self.tree
-        # Add all substrings to the tree before the full string
-        if text[:-1] not in self.encode_map:
-            self.add(text[:-1])
+        assert text[:-1] in self.encode_map, f'{repr(text[:-1])} not in encode_map'
         # Add new token to our maps
         token = len(self.encode_map)
         assert token not in self.decode_map, f'{token} already in decode_map'
         self.encode_map[text] = token
         self.decode_map[token] = text
         # Traverse the tree to add the node
+        current = self.tree
         while text:
             t, *text = text
             if t not in current:
@@ -39,7 +43,8 @@ class Tokenization:
         current = self.tree
         while text and text[0] in current and self.rng.random() < compression:
             code.append(text[0])
-            current, text = current[text[0]], text[1:]
+            current = current[text[0]]
+            text = text[1:]
         # Return the token and remaining text
         return self.encode_map[bytes(code)], text
 
@@ -56,3 +61,12 @@ class Tokenization:
     def decode(self, tokens: list):
         ''' Decode a list of tokens, returning the original text '''
         return b''.join(self.decode_map[t] for t in tokens)
+
+    @classmethod
+    def basic(cls, seed=None):
+        ''' Return a tokenization with just single bytes '''
+        tok = cls(seed=seed)
+        # Add all single-byte tokens
+        for b in range(256):
+            tok.add(bytes([b]))
+        return tok

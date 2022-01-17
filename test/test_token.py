@@ -12,6 +12,32 @@ class TestTokenization(unittest.TestCase):
         self.assertEqual(t.add(b'a'), 1)
         self.assertEqual(t.add(b'b'), 2)
         self.assertEqual(t.add(b'c'), 3)
+        self.assertEqual(len(t), 4)  # includes empty string
+        for _ in range(100):
+            text = bytes(rng.choices(b'abc', k=rng.randint(1, 10)))
+            self.assertEqual(text, t.decode(t.encode(text)))
+
+    def test_contains(self):
+        ''' Check the 'in' operator works for codes and tokens '''
+        tok = Tokenization(0)
+        self.assertEqual(tok.add(b'a'), 1)
+        self.assertEqual(tok.add(b'b'), 2)
+        self.assertEqual(tok.add(b'ab'), 3)
+        self.assertIn(b'a', tok)
+        self.assertIn(b'b', tok)
+        self.assertIn(b'ab', tok)
+        self.assertIn(0, tok)
+        self.assertIn(1, tok)
+        self.assertIn(2, tok)
+        self.assertIn(3, tok)
+        self.assertNotIn(b'c', tok)
+        self.assertNotIn(b'abc', tok)
+        self.assertNotIn(4, tok)
+
+    def test_basic(self):
+        ''' Test the basic tokenization '''
+        rng = random.Random(0)
+        t = Tokenization.basic()
         for _ in range(100):
             text = bytes(rng.choices(b'abc', k=rng.randint(1, 10)))
             self.assertEqual(text, t.decode(t.encode(text)))
